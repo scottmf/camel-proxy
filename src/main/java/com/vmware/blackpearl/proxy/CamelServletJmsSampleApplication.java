@@ -3,9 +3,11 @@ package com.vmware.blackpearl.proxy;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.camel.component.servlet.CamelHttpTransportServlet;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.embedded.ServletRegistrationBean;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -40,5 +42,13 @@ public class CamelServletJmsSampleApplication extends SpringBootServletInitializ
         threadPoolTaskScheduler.setPoolSize(8);
         return threadPoolTaskScheduler;
     }
-    
+
+    @Bean
+    public ServletRegistrationBean servletRegistrationBean() {
+        CamelHttpTransportServlet servlet = new CamelHttpTransportServlet();
+        ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean(servlet, "/*");
+        servletRegistrationBean.setName("CamelServlet");
+        return servletRegistrationBean;
+    }
+
 }
