@@ -1,0 +1,85 @@
+buildscript {
+    ext {
+        springBootVersion = '1.4.3.RELEASE'
+    }
+    repositories {
+        // sample of adding a repo for plugins
+        // maven { url 'http://build-squid.eng.vmware.com/nexus/content/groups/repo' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+plugins {
+    id "com.jfrog.artifactory" version "3.1.1"
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'maven-publish'
+
+group = 'com.vmware.blackpearl.proxy'
+def projectVersion = '1.0.0-SNAPSHOT'
+
+def projectName = 'camel-proxy'
+
+jar {
+    baseName = "${projectName}"
+    version = "${projectVersion}"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    // to add other repos
+    // maven { url 'http://build-artifactory.eng.vmware.com/artifactory/<repo name>' }
+    // maven { url 'http://build-squid.eng.vmware.com/nexus/content/groups/repo' }
+}
+
+configurations {
+    providedRuntime
+}
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    def camelVersion = '2.17.4'
+    compile group: 'org.apache.camel', name: 'camel-servlet', version: "${camelVersion}"
+    compile group: 'org.apache.camel', name: 'camel-http4', version: "${camelVersion}"
+    compile group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: "${camelVersion}"
+    compile group: 'org.apache.camel', name: 'camel-spring', version: "${camelVersion}"
+    compile group: 'org.apache.camel', name: 'camel-spring-javaconfig', version: "${camelVersion}"
+    compile group: 'org.apache.camel', name: 'camel-core', version: "${camelVersion}"
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+eclipse {
+    classpath {
+         downloadSources = true
+         downloadJavadoc = true
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}
+
+publishing {
+    publications {
+        main(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}

@@ -90,7 +90,7 @@ public class CamelRouteConfig {
                       ", inHeaders=" + exchange.getIn().getHeaders() +
                       ", inBody=" + exchange.getIn().getBody());
         }
-        Exchange result = camelTemplate.send("http4://hostname/api/path?bridgeEndpoint=true&amp;throwExceptionOnFailure=false" + opts, exchange);
+        Exchange result = camelTemplate.send("http4://google.com?bridgeEndpoint=true&amp;throwExceptionOnFailure=false" + opts, exchange);
         Object body = exchange.getOut().getBody();
         Message out = exchange.getOut();
         if (log.isDebugEnabled()) {
