@@ -64,13 +64,31 @@ public class CamelRouteConfig {
 
     @Bean
     public RouteBuilder route() {
+        camelTemplate.getCamelContext().getProperties().put("http.proxyScheme", "https");
         return new RouteBuilder() {
             public void configure() throws Exception {
+//                configureSslForHttp4();
                 log.info("configuring servlet interceptor");
-                routeDefinition = from("servlet:///?matchOnUriPrefix=true").process(getAsyncProcessor());
+                from("servlet:///?matchOnUriPrefix=true").process(getAsyncProcessor());
             }
         };
     }
+
+/*
+    private void configureSslForHttp4() {
+        KeyStoreParameters ksp = new KeyStoreParameters();
+        String proxyKeyStore = CamelServletJmsSampleApplication.getProxyKeyStore();
+        ksp.setResource(proxyKeyStore);
+        ksp.setPassword("cmpkeystore");
+        KeyManagersParameters kmp = new KeyManagersParameters();
+        kmp.setKeyStore(ksp);
+        kmp.setKeyPassword("cmpkeystore");
+        SSLContextParameters scp = new SSLContextParameters();
+        scp.setKeyManagers(kmp);
+        HttpComponent httpComponent = camelTemplate.getCamelContext().getComponent("https4", HttpComponent.class);
+        httpComponent.setSslContextParameters(scp);
+    }
+*/
 
     // using an synchronous call
     private Processor getProcessor() {
@@ -82,15 +100,12 @@ public class CamelRouteConfig {
     }
 
     public void processExchange(final Exchange exchange) {
-        String opts = "?concurrentConsumers=128&maxConcurrentConsumers=1024&requestTimeout=30000";
-        final String method = (String) exchange.getIn().getHeader(Exchange.HTTP_METHOD);
-        opts = (method != null && method.equalsIgnoreCase("get")) ? opts + "&deliveryPersistent=false" : opts;
         if (log.isDebugEnabled()) {
             log.debug("(before jms) exchange=" + exchange +
                       ", inHeaders=" + exchange.getIn().getHeaders() +
                       ", inBody=" + exchange.getIn().getBody());
         }
-        Exchange result = camelTemplate.send("http4://google.com?bridgeEndpoint=true&amp;throwExceptionOnFailure=false" + opts, exchange);
+        Exchange result = camelTemplate.send("https4://www.google.com:443?bridgeEndpoint=true&throwExceptionOnFailure=false", exchange);
         Object body = exchange.getOut().getBody();
         Message out = exchange.getOut();
         if (log.isDebugEnabled()) {

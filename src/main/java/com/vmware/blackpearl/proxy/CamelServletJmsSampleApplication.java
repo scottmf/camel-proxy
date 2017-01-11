@@ -1,5 +1,6 @@
 package com.vmware.blackpearl.proxy;
 
+import java.util.Properties;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,6 +19,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class CamelServletJmsSampleApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) throws Exception {
+        Properties systemProps = System.getProperties();
+//        systemProps.put("javax.net.debug","ssl");
+        System.setProperties(systemProps);
+
         SpringApplication.run(CamelServletJmsSampleApplication.class, args);
     }
     
@@ -39,7 +44,7 @@ public class CamelServletJmsSampleApplication extends SpringBootServletInitializ
                 return thread;
             }
         });
-        threadPoolTaskScheduler.setPoolSize(8);
+        threadPoolTaskScheduler.setPoolSize(16);
         return threadPoolTaskScheduler;
     }
 
@@ -51,4 +56,47 @@ public class CamelServletJmsSampleApplication extends SpringBootServletInitializ
         return servletRegistrationBean;
     }
 
+/*
+ * NOTE: need to create a keystore for this to work
+ * keytool -genkey -alias apache -keyalg RSA -sigalg SHA1WithRSA -keysize 2048 -keystore ${HOME}/proxy.keystore -dname "CN=www.oaklandathletics.com,OU=it, O=As, L=Oakland, ST=CA, C=US" -storepass cmpkeystore
+    @Bean
+    public EmbeddedServletContainerCustomizer containerCustomizer() throws Exception {
+        return new EmbeddedServletContainerCustomizer () {
+            @Override
+             public void customize(ConfigurableEmbeddedServletContainer factory) {
+                 if (factory instanceof TomcatEmbeddedServletContainerFactory) {
+                     TomcatEmbeddedServletContainerFactory containerFactory = (TomcatEmbeddedServletContainerFactory) factory;
+                     AccessLogValve accessLogValve = new AccessLogValve();
+                     accessLogValve.setPattern("remoteIp='%h' %l %u %t call='%r' returnCode='%s' bytes='%b' " +
+                         "duration='%D' auth='%{AUTHORIZATION}i' traceId='%{trace-id}i'");
+                     String dir = System.getProperty("user.dir");
+                     accessLogValve.setDirectory(dir + File.separator + "logs" + File.separator);
+                     accessLogValve.setPrefix("access_log-");
+                     accessLogValve.setSuffix(".txt");
+                     containerFactory.addContextValves(accessLogValve);
+                     containerFactory.addConnectorCustomizers(new TomcatConnectorCustomizer() {
+                             @Override
+                             public void customize(Connector connector) {
+                                 connector.setPort(8443);
+                                 connector.setSecure(true);
+                                 connector.setScheme("https");
+                                 Http11NioProtocol proto = (Http11NioProtocol) connector.getProtocolHandler();
+                                 proto.setSSLEnabled(true);
+                                 proto.setKeystoreFile(getProxyKeyStore());
+                                 proto.setKeystorePass("cmpkeystore");
+                                 proto.setKeyAlias("apache");
+                                 proto.setKeyPass("cmpkeystore");
+                             }
+                         });
+                 }
+             }
+        };
+    }
+
+    static final String getProxyKeyStore() {
+        String home = System.getProperty("user.home");
+        String fs = File.separator;
+        return home + fs + "proxy.keystore";
+    }
+*/
 }
